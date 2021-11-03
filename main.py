@@ -49,15 +49,11 @@ def mouseMoved(app, event):
         if sliced(fruit.x, fruit.y, app.x, app.y, fruit.r):
             app.fruits.remove(fruit)
 
-
-
 def sliced(x1, y1, x2, y2, r):
     return distance(x1,y1,x2,y2) <= r
 
-
 def distance(x1,y1,x2,y2):
     return ((x2-x1) ** 2 + (y2- y1) ** 2) ** (1/2)
-
 
 #timer fired
 def timerFired(app):
