@@ -45,6 +45,19 @@ def appStarted(app):
 def mouseMoved(app, event):
     app.x = event.x
     app.y = event.y
+    for fruit in app.fruits:
+        if sliced(fruit.x, fruit.y, app.x, app.y, fruit.r):
+            app.fruits.remove(fruit)
+
+
+
+def sliced(x1, y1, x2, y2, r):
+    return distance(x1,y1,x2,y2) <= r
+
+
+def distance(x1,y1,x2,y2):
+    return ((x2-x1) ** 2 + (y2- y1) ** 2) ** (1/2)
+
 
 #timer fired
 def timerFired(app):
@@ -67,19 +80,17 @@ def timerFired(app):
     for fruit in app.fruits:
         fruit.t += 1
 
-
 def redrawAll(app, canvas):
-    startY = random.randint(app.height//2, app.height)
     for fruit in  app.fruits:
         if fruit.pos == 0:
-            x =  fruit.findX()
-            y = fruit.findY()
+            fruit.x =  fruit.findX()
+            fruit.y = fruit.findY()
         elif fruit.pos ==  1:
-            x = app.width - fruit.findX()
-            y = fruit.findY()
+            fruit.x = app.width - fruit.findX()
+            fruit.y = fruit.findY()
         r = fruit.r
         c = fruit.color
-        canvas.create_oval(x - r, y - r, x + r, y + r, fill = c)
+        canvas.create_oval(fruit.x - r, fruit.y - r, fruit.x + r, fruit.y + r, fill = c)
         if app.x != None and app.y != None:
             canvas.create_oval(app.x - app.r, app.y - app.r, app.x + app.r, app.y + app.r, fill = "purple")
 
