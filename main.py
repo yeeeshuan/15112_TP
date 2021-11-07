@@ -12,12 +12,13 @@ class fruit(object):
         self.yl = None
         self.xr = None
         self.yr = None
+        self.x = random.randint(100, 300)
 
     def findX(self):
         return (self.v * math.cos(self.a) * self.t)
 
     def findY(self):
-        return (self.v * math.sin(self.a) * self.t - 7 * self.t ** 2)
+        return (self.v * math.sin(self.a) * self.t - 10 * self.t ** 2)
 
     def setSplit(self):
         xl = self.x
@@ -70,10 +71,10 @@ def distance(x1,y1,x2,y2):
 #timer fired
 def timerFired(app):
     app.time += 1
-    if app.time % 10 == 0:
+    if app.time % 20 == 0:
         n = random.randint(0,2)
-        v = random.randint(70,100)
-        a = random.randint(70,85)
+        v = random.randint(80,100)
+        a = random.randint(75,85)
         a = a * math.pi/180
         if n == 0:
             fruit = apple(v,a)
@@ -100,11 +101,11 @@ def redrawAll(app, canvas):
             canvas.create_oval(fruit.xl - r, fruit.ylr - r, fruit.xl + r, fruit.ylr + r, fill=c)
             canvas.create_oval(fruit.xr - r, fruit.ylr - r, fruit.xr + r, fruit.ylr + r, fill=c)
 
-        fruit.x =  100 + fruit.findX()
-        fruit.y =  650 - fruit.findY()
+        fruit.x += fruit.findX()
+        fruit.y =  app.height - fruit.findY()
 
         canvas.create_oval(fruit.x - r, fruit.y - r, fruit.x + r, fruit.y + r, fill = c)
         if app.x != None and app.y != None:
             canvas.create_oval(app.x - app.r, app.y - app.r, app.x + app.r, app.y + app.r, fill = "purple")
 
-runApp(width = 700, height = 600)
+runApp(width = 1000, height = 1000)
