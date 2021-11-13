@@ -13,6 +13,15 @@
 
 11/7 (1 Hour):
 —worked on fruit being thrown from bottom of screen
-—
+—figured out how to generate three fruits at once following
+basic physics principles
+
+11/12 (3 Hours):
+—worked on gameOver screen, how to keep track of lives,
+and how to reset
+—worked on openCV and how to track brightest pixel on screen
+—can think about interactions—is brightest pixel best interactive
+method, or would color detection work better?
+
 
 
