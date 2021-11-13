@@ -73,11 +73,6 @@ def mouseMoved(app, event):
 # combined tacking code from https://www.pyimagesearch.com/2014/09/29/
 # finding-brightest-spot-image-using-python-opencv/ with 112 graphics
 def cameraFired(app):
-    # construct the argument parse and parse the arguments
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--image", help="path to the image file")
-    ap.add_argument("-r", "--radius", type=int,
-                    help="radius of Gaussian blur; must be odd")
     # flips screen to march direction of movement
     app.frame = cv2.flip(app.frame, 1)
     # converts image to grayscale
