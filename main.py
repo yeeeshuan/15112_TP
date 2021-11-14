@@ -2,7 +2,6 @@ from cmu_112_graphics_openCV import *
 import random
 import math
 import cv2
-import argparse
 
 # fruit class
 class fruit(object):
@@ -11,18 +10,28 @@ class fruit(object):
         self.t = 0
         self.a = a
         self.split = False
+        #for after fruit is split and individual pieces
         self.x_after = None
         self.y_after = None
+        self.xr_after = None
+        self.yr_after = None
+        fruit.t_after = 0
 
     # finds the x coordinate with respect to horizontal vectors
     def findX(self):
         return (self.v * math.cos(self.a) * self.t)
 
-    # finds the  y coordinate with respect to vertical vectors
+    # finds the x coordinates after split
+    def findXAfter(self):
+        return (10 * math.cos(330 * (math.pi/180)) * self.t_after)
+
+    # finds the y coordinate with respect to vertical vectors
     def findY(self):
-        if self.split == True:
-            return self.y + 1
         return (self.v * math.sin(self.a) * self.t - 5 * self.t ** 2)
+
+    # finds the y coordinates after split
+    def findYAfter(self):
+        return (3 * math.sin(330 * (math.pi/180)) * self.t - 0.5 * self.t ** 2)
 
 # subclasses of different fruits
 # contains radius and color attributes
@@ -88,8 +97,11 @@ def cameraFired(app):
     # if fruit is sliced, set coordinates for falling and split to True
     for fruit in app.fruits:
       if fruit.split == False and sliced(fruit.x, fruit.y, app.x, app.y, fruit.r):
+        # sets the starting point of separate pieces of split fruit
         fruit.x_after = fruit.x
         fruit.y_after = fruit.y
+        fruit.xr_after = fruit.x
+        fruit.yr_after = fruit.y
         fruit.split = True
 
 # if r is pressed, game restarts
@@ -141,8 +153,14 @@ def timerFired(app):
             app.lives -= 1
             if app.lives <= 0:
                 app.gameOver = True
+        #finds the coordinates of split fruit
         if fruit.split:
-            fruit.y_after += 10
+            fruit.t_after += 1
+            fruit.x_after -= fruit.findXAfter()
+            fruit.y_after -= fruit.findYAfter()
+            fruit.xr_after += fruit.findXAfter()
+            fruit.yr_after -= fruit.findYAfter()
+
 
 def redrawAll(app, canvas):
     # canvas.create_image(200, 300, image=ImageTk.PhotoImage(app.image1))
@@ -157,7 +175,8 @@ def redrawAll(app, canvas):
         r = fruit.r
         c = fruit.color
         if fruit.split:
-            canvas.create_oval(fruit.x_after - r, fruit.y_after - r, fruit.x_after + r, fruit.y_after + r, fill=c)
+            canvas.create_oval(fruit.x_after - r/2, fruit.y_after - r/2, fruit.x_after + r/2, fruit.y_after + r/2, fill=c)
+            canvas.create_oval(fruit.xr_after - r/2, fruit.yr_after - r/2, fruit.xr_after + r/2, fruit.yr_after + r/2, fill=c)
         else:
             canvas.create_oval(fruit.x - r, fruit.y - r, fruit.x + r, fruit.y + r, fill = c)
     # creates mouse interaction
