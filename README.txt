@@ -24,4 +24,17 @@ and how to reset
 method, or would color detection work better?
 
 
+11/13 (1 Hour):
+—implemented fruit pieces falling function
+
+11/15 (2 Hours):
+—improved falling objects to be semicircles
+—added new fruits, including bomb which "blows" up if sliced
+—added background
+
+11/16 (2 Hours):
+—added combo score with respect to timer
+—fixed the length of app.fruits to match number of objects on screen
+
+
 
