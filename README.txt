@@ -23,7 +23,6 @@ and how to reset
 —can think about interactions—is brightest pixel best interactive
 method, or would color detection work better?
 
-
 11/13 (1 Hour):
 —implemented fruit pieces falling function
 
@@ -31,10 +30,22 @@ method, or would color detection work better?
 —improved falling objects to be semicircles
 —added new fruits, including bomb which "blows" up if sliced
 —added background
+—added app.lives function
 
 11/16 (2 Hours):
 —added combo score with respect to timer
 —fixed the length of app.fruits to match number of objects on screen
+—think about position of hits on fruit and how it  can impact falling
+
+11/17 (3 Hours):
+—Talk with Andrew:
+    —More features
+    —2 min video demo
+    —explain core complexities
+—Worked on splash functions
+—Cutting interactions to follow angle that user hits the fruits (polygonal cutting)
+
+
 
 
 
