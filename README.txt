@@ -23,6 +23,8 @@ and how to reset
 —can think about interactions—is brightest pixel best interactive
 method, or would color detection work better?
 
+TP0
+
 11/13 (1 Hour):
 —implemented fruit pieces falling function
 
@@ -37,13 +39,23 @@ method, or would color detection work better?
 —fixed the length of app.fruits to match number of objects on screen
 —think about position of hits on fruit and how it  can impact falling
 
-11/17 (3 Hours):
+11/17 (5 Hours):
 —Talk with Andrew:
     —More features
     —2 min video demo
     —explain core complexities
 —Worked on splash functions
 —Cutting interactions to follow angle that user hits the fruits (polygonal cutting)
+
+TP1
+
+11/19 (1 Hour):
+—Started working on title screen and help screen
+
+11/21 (2 Hours):
+—Worked title screen and helper screen
+—Figured out cutting interaction to slice through play and help modes
+—Figured out how to exit from screens
 
 
 

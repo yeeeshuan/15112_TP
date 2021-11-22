@@ -107,10 +107,17 @@ class splash(object):
 
 # appstarted
 def appStarted(app):
+    #https://imgs.mi9.com/uploads/game/4962/fruit-ninja_1920x1200_91746.jpg
     app.image1 = app.loadImage('background.jpg')
     app.image2 = app.scaleImage(app.image1,1)
+    app.image3 = app.loadImage('title.jpg')
+    app.image4 = app.scaleImage(app.image3, 1)
     app.fruits = []
     app.timerDelay = 100
+    app.gameStart = True
+    app.helpScreen = False
+    app.startX = None
+    app.startY =  None
     app.x = None
     app.y = None
     app.r = 10
@@ -126,8 +133,27 @@ def appStarted(app):
     app.hitY = None
     app.splashes = []
 
+
 # mouseMoved in substitute for cameraFired
 def mouseMoved(app, event):
+    if distance(event.x, event.y, app.width // 4, 3 * app.height // 4) <= 60:
+        app.gameStart = False
+
+    if distance(event.x, event.y, 3 * app.width // 4, 3 * app.height // 4) <= 60:
+        app.helpScreen = True
+
+    app.startX = event.x
+    app.startY = event.y
+
+    if distance(event.x, event.y, app.width//4,  app.height//2) <= 30:
+        app.gameStart = False
+
+    if distance(event.x, event.y, 3 * app.width // 4, app.height // 2) <= 30:
+        app.helpScreen = True
+
+    app.startX = event.x
+    app.startY = event.y
+
     app.combo = False
     app.critical_hit = False
     app.x = event.x
@@ -144,10 +170,14 @@ def mouseMoved(app, event):
                 a = random.randint(0, 180)
                 r = random.randint(5, 15)
                 nsplash = splash(app.hitX, app.hitY, fruit.r, a, r)
-                app.splashes.append(nsplash)
-                print(len(app.splashes))
+                if not isinstance(fruit,  bomb):
+                    app.splashes.append(nsplash)
             #finds the angle of split for split animation
-            angle = math.degrees(math.atan((app.hitY - fruit.y)/(app.hitX - fruit.x)))
+            #in case of zero division
+            if app.hitX - fruit.x == 0:
+                angle = 90
+            else:
+                angle = math.degrees(math.atan((app.hitY - fruit.y)/(app.hitX - fruit.x)))
 
             if app.hitX > fruit.x and app.hitY < fruit.y:
                 fruit.lstart = angle
@@ -183,6 +213,18 @@ def mouseMoved(app, event):
             fruit.yr_after = app.hitY
             fruit.split = True
 """
+
+def mouseMoved(app, event):
+    if distance(event.x, event.y, app.width // 4,  3 * app.height // 4) <= 60:
+        app.gameStart = False
+
+    if distance(event.x, event.y, 3 * app.width // 4, 3* app.height // 4) <= 60:
+        app.helpScreen = True
+
+    app.startX = event.x
+    app.startY = event.y
+
+
 # tracks the brightest pixel on the screen as tracker
 # combined tacking code from https://www.pyimagesearch.com/2014/09/29/
 # in collaboration with Alina Chen (alinache) 
@@ -201,18 +243,27 @@ def cameraFired(app):
     app.y = maxLoc[1]
     cv2.circle(app.frame, maxLoc, 5, (255, 0, 0), 2)
     # display the results of the naive attempt
-    cv2.imshow("Naive", app.frame)
+    cv2.imshow("Tracker", app.frame)
+    # if fruit is sliced, set coordinates for falling and split to True
     # if fruit is sliced, set coordinates for falling and split to True
     for fruit in app.fruits:
         if fruit.split == False and sliced(fruit.x, fruit.y, app.x, app.y, fruit.r):
+            # stores position that fruit is hit
             app.hitX = app.x
             app.hitY = app.y
+            # creates splash animation
             for x in range(5):
-                a = random.randint(0, 359)
-                nsplash = splash(app.hitX, app.hitY, fruit.r, a)
-                app.splashes.append(nsplash)
+                a = random.randint(0, 180)
+                r = random.randint(5, 15)
+                nsplash = splash(app.hitX, app.hitY, fruit.r, a, r)
+                if not isinstance(fruit, bomb):
+                    app.splashes.append(nsplash)
             # finds the angle of split for split animation
-            angle = math.degrees(math.atan((app.hitY - fruit.y) / (app.hitX - fruit.x)))
+            # in case of zero division
+            if app.hitX - fruit.x == 0:
+                angle = 90
+            else:
+                angle = math.degrees(math.atan((app.hitY - fruit.y) / (app.hitX - fruit.x)))
 
             if app.hitX > fruit.x and app.hitY < fruit.y:
                 fruit.lstart = angle
@@ -230,25 +281,33 @@ def cameraFired(app):
                 fruit.lstart = 360 - angle
                 fruit.rstart = 360 - angle
 
+            # if hit near middle of fruit, critical hit
             if abs(app.hitY - fruit.y) <= 10:
                 app.score += 10
                 app.critical_hit = True
+                print("CRITICAL HIT")
             else:
                 app.score += 1
-
             if isinstance(fruit, bomb):
                 app.lives -= 1
                 fruit.hit = True
+
+            # sets coordinates and split
             fruit.x_after = app.hitX
             fruit.y_after = app.hitY
             fruit.xr_after = app.hitX
             fruit.yr_after = app.hitY
             fruit.split = True
+
 """
 # if r is pressed, game restarts
 def keyPressed(app, event):
     if event.key == "r":
         appStarted(app)
+
+    if app.helpScreen and event.key == "b":
+            app.helpScreen = False
+
 
 # returns if fruit on screen is sliced
 def sliced(x1, y1, x2, y2, r):
@@ -260,137 +319,176 @@ def distance(x1,y1,x2,y2):
 
 # timer fired
 def timerFired(app):
-    app.time += 1
-    gap = 30
-    x = 200
-    total = random.randint(3,5)
-    # randomly generates three fruits to be thrown from bottom of screen
-    if app.time % gap == 0:
-        for i in range(total):
-            #projectile motion variables
-            n = random.randint(0,6)
-            v = random.randint(70,80)
-            a = random.randint(88,90)
-            a = a * math.pi/180
-            if n == 0:
-                fruit = apple(v,a)
-                app.fruits.append(fruit)
-            elif n == 1:
-                fruit = orange(v, a)
-                app.fruits.append(fruit)
-            elif n == 2:
-                fruit = watermelon(v, a)
-                app.fruits.append(fruit)
-            elif n == 3:
-                fruit = pineapple(v, a)
-                app.fruits.append(fruit)
-            elif n == 4:
-                fruit = blueberry(v, a)
-                app.fruits.append(fruit)
-            elif n == 5:
-                fruit = kiwi(v, a)
-                app.fruits.append(fruit)
-            elif n == 6:
-                fruit = bomb(v, a)
-                app.fruits.append(fruit)
-            fruit.x = random.randint(x-50, x)
-            x += 150
+    if app.gameStart:
+        pass
+    else:
+        app.time += 1
+        gap = 30
+        x = 200
+        total = random.randint(3,5)
+        # randomly generates three fruits to be thrown from bottom of screen
+        if app.time % gap == 0:
+            count = 0
+            for i in range(total):
+                #projectile motion variables
+                n = random.randint(0,6)
+                v = random.randint(70,80)
+                a = random.randint(88,90)
+                a = a * math.pi/180
+                if n == 0:
+                    fruit = apple(v,a)
+                    app.fruits.append(fruit)
+                elif n == 1:
+                    fruit = orange(v, a)
+                    app.fruits.append(fruit)
+                elif n == 2:
+                    fruit = watermelon(v, a)
+                    app.fruits.append(fruit)
+                elif n == 3:
+                    fruit = pineapple(v, a)
+                    app.fruits.append(fruit)
+                elif n == 4:
+                    fruit = blueberry(v, a)
+                    app.fruits.append(fruit)
+                elif n == 5:
+                    fruit = kiwi(v, a)
+                    app.fruits.append(fruit)
+                elif n == 6:
+                    count += 1
+                    if count != total:
+                        fruit = bomb(v,a)
+                        app.fruits.append(fruit)
 
-    # increases the t variable for each fruit on screen
-    count = 0
-    for fruit in app.fruits:
-        fruit.t += 1
-        # finds the x and y variables for each fruit
-        fruit.x += fruit.findX()
-        fruit.y = app.height - fruit.findY()
-        # if fruit is not split and falls off screen, decrease lives
-        # if split, fruits follow falling motion
-        if (fruit.x > app.width or fruit.y > app.height):
-            if not fruit.split and not isinstance(fruit, bomb):
-                app.lives -= 1
-                if app.lives <= 0:
-                    app.gameOver = True
-            app.fruits.remove(fruit)
+                fruit.x = random.randint(x-50, x)
+                x += 125
 
-        #finds the coordinates of split fruit
-        if fruit.split and not isinstance(fruit, bomb):
-            count += 1
-            if count == 1:
-                app.t_after = app.time
-            fruit.t_after += 1
-            fruit.x_after -= fruit.findXAfter()
-            fruit.y_after -= fruit.findYAfter()
-            fruit.xr_after += fruit.findXAfter()
-            fruit.yr_after -= fruit.findYAfter()
-            if (fruit.x_after > app.width or fruit.xr_after > app.width
-                or fruit.y_after > app.height or fruit.yr_after > app.height):
-                try:
-                    app.fruits.remove(fruit)
-                except:
-                    pass
+        # increases the t variable for each fruit on screen
+        count = 0
+        for fruit in app.fruits:
+            fruit.t += 1
+            # finds the x and y variables for each fruit
+            fruit.x += fruit.findX()
+            fruit.y = app.height - fruit.findY()
+            # if fruit is not split and falls off screen, decrease lives
+            # if split, fruits follow falling motion
+            if (fruit.x > app.width or fruit.y > app.height):
+                if not fruit.split and not isinstance(fruit, bomb):
+                    app.lives -= 1
+                    if app.lives <= 0:
+                        app.gameOver = True
+                app.fruits.remove(fruit)
+
+            #finds the coordinates of split fruit
+            if fruit.split and not isinstance(fruit, bomb):
+                count += 1
+                if count == 1:
+                    app.t_after = app.time
+                fruit.t_after += 1
+                fruit.x_after -= fruit.findXAfter()
+                fruit.y_after -= fruit.findYAfter()
+                fruit.xr_after += fruit.findXAfter()
+                fruit.yr_after -= fruit.findYAfter()
+                if (fruit.x_after > app.width or fruit.xr_after > app.width
+                    or fruit.y_after > app.height or fruit.yr_after > app.height):
+                    try:
+                        app.fruits.remove(fruit)
+                    except:
+                        pass
                 # if three fruits hit under .3 seconds, combo
-        if count == total:
-            if app.t_after - app.time <= total * 100:
-                app.combo = True
+            if count == total:
+                if app.t_after - app.time <= total * 100:
+                    app.combo = True
 
-    #finds the coordinates of splash bubbles
-    for splash in app.splashes:
-        splash.t += 1
-        splash.x = splash.org_X + 10 - splash.findXAfter()
-        splash.y = splash.org_Y + 10 - splash.findYAfter()
-        if distance(splash.x, splash.y, splash.org_X, splash.org_Y) > splash.r + 30:
-            app.splashes.remove(splash)
+        #finds the coordinates of splash bubbles
+        for splash in app.splashes:
+            splash.t += 1
+            splash.x = splash.org_X + 10 - splash.findXAfter()
+            splash.y = splash.org_Y + 10 - splash.findYAfter()
+            if distance(splash.x, splash.y, splash.org_X, splash.org_Y) > splash.r + 30:
+                app.splashes.remove(splash)
 
 def redrawAll(app, canvas):
-    canvas.create_image(200, 300, image=ImageTk.PhotoImage(app.image2))
-    # app.drawCamera(canvas)
-    # screen for game over
-    if app.gameOver:
-        canvas.create_rectangle(0,0, app.width, app.height, fill="pink")
-        canvas.create_text(app.width//2, app.height//2, text = "GAME OVER. PRESS R TO RESET")
-        return
-    # draws the fruits with respect to whether or not they've been split
-    for fruit in app.fruits:
-        c = fruit.color
-        r = fruit.r
-        if fruit.split:
-            if isinstance(fruit, bomb):
-                r += 3
-                fruit.r = r
-                canvas.create_oval(fruit.x - r, fruit.y - r , fruit.x + r, fruit.y + r, fill= "red")
-                canvas.create_oval(fruit.x - r/2, fruit.y - r/2, fruit.x + r/2, fruit.y + r/2, fill="orange")
-                canvas.create_oval(fruit.x - r/4, fruit.y - r/4, fruit.x + r/4, fruit.y + r/4, fill="yellow")
-            else:
-                fruit.lstart += 10
-                fruit.rstart -= 10
-                canvas.create_arc(fruit.x_after - r/2, fruit.y_after - r/2, fruit.x_after + r/2, fruit.y_after + r/2,
-                                 start = fruit.lstart, extent = 180, fill = c)
-                canvas.create_arc(fruit.xr_after - r/2, fruit.yr_after - r/2, fruit.xr_after + r/2, fruit.yr_after + r/2,
-                                start = fruit.rstart, extent = -180, fill = c)
+    if app.gameStart:
+        if app.helpScreen:
+            canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.image2))
+            canvas.create_text(app.width // 2, 20, text="HELP SCREEN HERE", fill = "white")
+            canvas.create_text(app.width // 2, 80, text="1. OPEN UP FLASHLIGHT TO USE AS CONTROLLER", fill = "white")
+            canvas.create_text(app.width // 2, 120, text="2. AIM AT THE SIDES OF THE FRUITS — "
+                                                        "CRITICAL HITS ARE HITS PERFECTLY AT THE SIDE", fill = "white")
+            canvas.create_text(app.width // 2, 160, text="3. TRY TO SLICE AS MANY FRUITS IN ONE MOTION AS POSSIBLE"
+                                                        " — IF ALL FRUITS ON SCREEN ARE SLICED, COMBO IS ACHIEVED", fill = "white")
+            canvas.create_text(app.width // 2, 200, text="4. DO NOT AIM FOR BOMBS", fill = "white")
+            canvas.create_text(app.width // 2, 240, text="5. UNSLICED FRUIT FALLEN OUT OF SCREEN WILL RESULT IN LIVE LOST", fill = "white")
+            canvas.create_text(app.width // 2, 280,
+                               text="6. PRESS R TO RESET GAME", fill = "white")
+            canvas.create_text(app.width // 2, 320,
+                               text="6. PRESS B TO GO BACK", fill = "white")
         else:
-            try :
-                canvas.create_oval(fruit.x - r, fruit.y - r, fruit.x + r, fruit.y + r, fill = c)
-                if isinstance(fruit, bomb):
-                    canvas.create_line(fruit.x - r/2, fruit.y - r/2, fruit.x + r/2, fruit.y + r/2, fill="red", width = 5)
-                    canvas.create_line(fruit.x - r / 2, fruit.y + r / 2, fruit.x + r / 2, fruit.y - r / 2, fill="red",
-                                   width=5)
-            except:
-                pass
 
-    # creates splashes if cut
-    for splash in app.splashes:
-        r = splash.rad
-        canvas.create_oval(splash.x - r , splash.y - r, splash.x + r, splash.y + r, fill = "blue")
-    # creates mouse interaction
-    if app.x != None and app.y != None:
-        canvas.create_oval(app.x - app.r, app.y - app.r, app.x + app.r, app.y + app.r, fill = "purple")
-    # prints the amount of lives on screen
-    canvas.create_text(15, 20, text = f"THIS MANY LIVES LEFT: {app.lives}")
-    canvas.create_text(app.width - 50 , 20, text=f"SCORE: {app.score, len(app.fruits)}")
-    # prints combos and critical hits
-    if app.critical_hit:
-        canvas.create_text(app.width - 50 , 40, text="CRITICAL HIT", fill="yellow", font="Helvetica 15 bold underline")
-    if app.combo:
-        canvas.create_text(app.width - 50, 40, text="COMBO", fill="yellow", font="Helvetica 15 bold underline")
+            canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.image4))
+            canvas.create_oval(app.width // 4 + 60, 3 * app.height // 4 + 60, app.width // 4 - 60, 3 * app.height // 4 - 60,
+                           fill="red")
+            canvas.create_text(app.width // 4,  3 * app.height // 4, text="PLAY")
+            canvas.create_oval(3* app.width // 4 + 60,  3 * app.height // 4 + 60, 3* app.width // 4 - 60,  3 * app.height // 4 - 60,
+                           fill="orange")
+            canvas.create_text(3 * app.width // 4,  3 * app.height // 4, text="HELP")
+        if app.startX != None and app.startY != None:
+            canvas.create_oval(app.startX - app.r, app.startY - app.r, app.startX + app.r, app.startY + app.r, fill="purple")
+    else:
+        canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.image2))
+        # prints the amount of lives on screen
+        canvas.create_text(120, 20, text=f"THIS MANY LIVES LEFT: {app.lives}", fill="yellow",
+                           font="Helvetica 15 bold underline")
+        canvas.create_text(app.width - 75, 20, text=f"SCORE: {app.score}", fill="yellow",
+                           font="Helvetica 15 bold underline")
+        # app.drawCamera(canvas)
+        # screen for game over
+        if app.gameOver:
+            canvas.create_rectangle(0,0, app.width, app.height, fill="pink")
+            canvas.create_text(app.width//2, app.height//2, text = "GAME OVER. PRESS R TO RESET")
+            return
+
+        # creates mouse interaction
+        if app.x != None and app.y != None:
+            canvas.create_oval(app.x - app.r, app.y - app.r, app.x + app.r, app.y + app.r, fill="purple")
+
+        # draws the fruits with respect to whether or not they've been split
+        for fruit in app.fruits:
+            c = fruit.color
+            r = fruit.r
+            if fruit.split:
+                if isinstance(fruit, bomb):
+                    r += 3
+                    fruit.r = r
+                    canvas.create_oval(fruit.x - r, fruit.y - r , fruit.x + r, fruit.y + r, fill= "red")
+                    canvas.create_oval(fruit.x - r/2, fruit.y - r/2, fruit.x + r/2, fruit.y + r/2, fill="orange")
+                    canvas.create_oval(fruit.x - r/4, fruit.y - r/4, fruit.x + r/4, fruit.y + r/4, fill="yellow")
+                else:
+                    fruit.lstart += 10
+                    fruit.rstart -= 10
+                    canvas.create_arc(fruit.x_after - r/2, fruit.y_after - r/2, fruit.x_after + r/2, fruit.y_after + r/2,
+                                 start = fruit.lstart, extent = 180, fill = c)
+                    canvas.create_arc(fruit.xr_after - r/2, fruit.yr_after - r/2, fruit.xr_after + r/2, fruit.yr_after + r/2,
+                                start = fruit.rstart, extent = -180, fill = c)
+            else:
+                try :
+                    canvas.create_oval(fruit.x - r, fruit.y - r, fruit.x + r, fruit.y + r, fill = c)
+                    if isinstance(fruit, bomb):
+                        canvas.create_line(fruit.x - r/2, fruit.y - r/2, fruit.x + r/2, fruit.y + r/2, fill="red", width = 5)
+                        canvas.create_line(fruit.x - r / 2, fruit.y + r / 2, fruit.x + r / 2, fruit.y - r / 2, fill="red",
+                                   width=5)
+                except:
+                    pass
+
+            # creates splashes if cut
+            for splash in app.splashes:
+                r = splash.rad
+                canvas.create_oval(splash.x - r , splash.y - r, splash.x + r, splash.y + r, fill = "blue")
+
+            # prints combos and critical hits
+            if app.critical_hit:
+                canvas.create_text(app.width - 70 , 40, text="CRITICAL HIT", fill="yellow", font="Helvetica 15 bold underline")
+            if app.combo:
+                canvas.create_text(app.width - 70, 60, text="COMBO", fill="yellow", font="Helvetica 15 bold underline")
 
 runApp(width =1000, height = 670)
