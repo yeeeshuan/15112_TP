@@ -4,6 +4,7 @@ import math
 import cv2
 import mediapipe as mp
 
+
 # fruit class
 class fruit(object):
     def __init__(self, v, a):
@@ -166,7 +167,8 @@ def mouseMoved(app, event):
     app.startX = event.x
     app.startY = event.y
 
-#cameraFired (openCV + 112Graphics)
+
+# cameraFired (openCV + 112Graphics)
 def cameraFired(app):
     app.combo = False
     app.critical_hit = False
@@ -176,28 +178,32 @@ def cameraFired(app):
     # in collaboration with Alina Chen (alinache)
     # finding-brightest-spot-image-using-python-opencv/ with 112 graphics
     if app.gameMode_1:
+        # flips frame
         app.frame = cv2.flip(app.frame, 1)
         # converts image to grayscale
         gray = cv2.cvtColor(app.frame, cv2.COLOR_BGR2GRAY)
         # perform a naive attempt to find the (x, y) coordinates of
         # the area of the image with the largest intensity value
         (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
+        # sets tracker (app.x, app.y) to position of brightest pixel
         app.x = maxLoc[0]
         app.y = maxLoc[1]
         cv2.circle(app.frame, maxLoc, 5, (255, 0, 0), 2)
 
+        # shows the tracking in action
         cv2.imshow("Tracker_1", app.frame)
 
     # tracks the index finger on screen as tracker
     # tracking code from
     # https://www.analyticsvidhya.com/blog/2021/07/building-a-hand-tracking-system-using-opencv/
     if app.gameMode_2:
+        # flips frame
         img = cv2.flip(app.frame, 1)
         mpHands = mp.solutions.hands
         hands = mpHands.Hands(static_image_mode=False,
-                          max_num_hands=2,
-                          min_detection_confidence=0.5,
-                          min_tracking_confidence=0.5)
+                              max_num_hands=2,
+                              min_detection_confidence=0.5,
+                              min_tracking_confidence=0.5)
 
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         results = hands.process(imgRGB)
@@ -208,9 +214,10 @@ def cameraFired(app):
                     cx, cy = int(lm.x * w), int(lm.y * h)
                     cv2.circle(img, (cx, cy), 3, (255, 0, 255), cv2.FILLED)
                     if id == 8:
+                        # sets tracker (app.x, app.y) to position of index finger
                         app.x = cx
                         app.y = cy
-
+        # shows the tracking in action
         cv2.imshow("Tracker_2", img)
 
     # if fruit is sliced, set coordinates for falling and split to True
@@ -316,7 +323,7 @@ def timerFired(app):
                 v = random.randint(70, 80)
                 a = random.randint(88, 90)
                 a = a * math.pi / 180
-                #fruits are appended to app.fruits list
+                # fruits are appended to app.fruits list
                 if n == 0:
                     fruit = apple(v, a)
                     app.fruits.append(fruit)
@@ -341,7 +348,7 @@ def timerFired(app):
                         fruit = bomb(v, a)
                         app.fruits.append(fruit)
 
-                #fruits are thrown from random positions—at most 125 pixels away
+                # fruits are thrown from random positions—at most 125 pixels away
                 fruit.x = random.randint(x - 50, x)
                 x += 125
 
@@ -359,13 +366,13 @@ def timerFired(app):
                     app.lives -= 1
                     if app.lives <= 0:
                         app.gameOver = True
-                #remove fruit from app.fruits list
+                # remove fruit from app.fruits list
                 app.fruits.remove(fruit)
 
             # finds the coordinates of split fruit
             if fruit.split and not isinstance(fruit, bomb):
                 count += 1
-                #starts timer from first fruit hit
+                # starts timer from first fruit hit
                 if count == 1:
                     app.t_after = app.time
                 fruit.t_after += 1
@@ -392,11 +399,12 @@ def timerFired(app):
             if distance(splash.x, splash.y, splash.org_X, splash.org_Y) > splash.r + 30:
                 app.splashes.remove(splash)
 
-#redrawAll
+
+# redrawAll
 def redrawAll(app, canvas):
-    #creates splash screens
+    # creates splash screens
     if app.gameStart:
-        #creates help screen directions
+        # creates help screen directions
         if app.helpScreen:
             canvas.create_image(app.width // 2, app.height // 2, image=ImageTk.PhotoImage(app.image2))
             canvas.create_text(app.width // 2, 80, text="1. GAME IS BEST PLAYED IN DARK ROOM", fill="white",
@@ -420,14 +428,14 @@ def redrawAll(app, canvas):
             canvas.create_text(app.width // 2, 360,
                                text="8. PRESS B TO GO BACK", fill="white", font="Helvetica 15 bold")
         else:
-            #creates start screen
+            # creates start screen
             canvas.create_image(app.width // 2, app.height // 2, image=ImageTk.PhotoImage(app.image4))
-            #blinks to catch user's attention
+            # blinks to catch user's attention
             if app.on:
                 canvas.create_text(app.width - 150, app.height // 2, text=f"MOVE MOUSE TO CIRCLES \n TO WORK",
-                               fill="white", font="Helvetica 15 bold")
+                                   fill="white", font="Helvetica 15 bold")
 
-            #play and help buttons
+            # play and help buttons
             canvas.create_oval(app.width // 4 + 60, 3 * app.height // 4 + 60, app.width // 4 - 60,
                                3 * app.height // 4 - 60, fill="red")
             canvas.create_text(app.width // 4, 3 * app.height // 4, text="FLASHLIGHT MODE")
@@ -442,7 +450,7 @@ def redrawAll(app, canvas):
             canvas.create_oval(app.startX - app.r, app.startY - app.r, app.startX + app.r, app.startY + app.r,
                                fill="purple")
     else:
-        #prints the number of lives and score on  screen
+        # prints the number of lives and score on  screen
         canvas.create_image(app.width // 2, app.height // 2, image=ImageTk.PhotoImage(app.image2))
         # prints the amount of lives on screen
         canvas.create_text(220, 40, text=f"THIS MANY LIVES LEFT: {app.lives}", fill="yellow",
@@ -502,10 +510,10 @@ def redrawAll(app, canvas):
 
             # prints combos and critical hits
             if app.critical_hit:
-                canvas.create_text(app.width//2, 80, text="CRITICAL HIT", fill="yellow",
+                canvas.create_text(app.width // 2, 80, text="CRITICAL HIT", fill="yellow",
                                    font="Arial 30 bold")
             if app.combo:
-                canvas.create_text(app.width//2, 80, text="COMBO", fill="yellow", font="Arial 30 bold")
+                canvas.create_text(app.width // 2, 80, text="COMBO", fill="yellow", font="Arial 30 bold")
 
 
 runApp(width=1000, height=670)
