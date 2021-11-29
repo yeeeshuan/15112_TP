@@ -57,6 +57,20 @@ TP1
 —Figured out cutting interaction to slice through play and help modes
 —Figured out how to exit from screens
 
+11/23 (1 Hour):
+—Fixed/photoshopped background screens
+
+TP2
+
+11/28 (5 Hours):
+—Worked openCV to track the index finger
+—added multiple game modes
+—enhanced splash screen/game interactions (fonts, composition)
+
+
+
+
+
 
 
 
