@@ -130,6 +130,8 @@ def appStarted(app):
     app.timerDelay = 100
     app.gameStart = True
     app.helpScreen = False
+    app.gameMode_1 = False
+    app.gameMode_2 = False
     app.startX = None
     app.startY = None
     app.x = None
@@ -154,6 +156,10 @@ def appStarted(app):
 def mouseMoved(app, event):
     if distance(event.x, event.y, app.width // 4, 3 * app.height // 4) <= 60:
         app.gameStart = False
+        app.gameMode_1 = True
+    if distance(event.x, event.y, app.width // 2, 3 * app.height // 4) <= 60:
+        app.gameStart = False
+        app.gameMode_2 = True
     if distance(event.x, event.y, 3 * app.width // 4, 3 * app.height // 4) <= 60:
         app.helpScreen = True
     app.startX = event.x
@@ -170,44 +176,45 @@ def cameraFired(app):
     # https://www.analyticsvidhya.com/blog/2021/07/building-a-hand-tracking-system-using-opencv/
     app.combo = False
     app.critical_hit = False
-    img = cv2.flip(app.frame, 1)
-    mpHands = mp.solutions.hands
-    hands = mpHands.Hands(static_image_mode=False,
+
+    if app.gameMode_1:
+        app.frame = cv2.flip(app.frame, 1)
+        # converts image to grayscale
+        gray = cv2.cvtColor(app.frame, cv2.COLOR_BGR2GRAY)
+        # perform a naive attempt to find the (x, y) coordinates of
+        # the area of the image with the largest intensity value
+        (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
+        app.x = maxLoc[0]
+        app.y = maxLoc[1]
+        cv2.circle(app.frame, maxLoc, 5, (255, 0, 0), 2)
+
+        cv2.imshow("Tracker", app.frame)
+
+    if app.gameMode_2:
+        img = cv2.flip(app.frame, 1)
+        mpHands = mp.solutions.hands
+        hands = mpHands.Hands(static_image_mode=False,
                           max_num_hands=2,
                           min_detection_confidence=0.5,
                           min_tracking_confidence=0.5)
-    mpDraw = mp.solutions.drawing_utils
+        mpDraw = mp.solutions.drawing_utils
 
-    imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    results = hands.process(imgRGB)
-    # print(results.multi_hand_landmarks)
-    if results.multi_hand_landmarks:
-        for handLms in results.multi_hand_landmarks:
-            for id, lm in enumerate(handLms.landmark):
-                # print(id,lm)
-                h, w, c = img.shape
-                cx, cy = int(lm.x * w), int(lm.y * h)
-                cv2.circle(img, (cx, cy), 3, (255, 0, 255), cv2.FILLED)
-                app.x = cx
-                app.y = cy
+        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = hands.process(imgRGB)
+        # print(results.multi_hand_landmarks)
+        if results.multi_hand_landmarks:
+            for handLms in results.multi_hand_landmarks:
+                for id, lm in enumerate(handLms.landmark):
+                    # print(id,lm)
+                    h, w, c = img.shape
+                    cx, cy = int(lm.x * w), int(lm.y * h)
+                    cv2.circle(img, (cx, cy), 3, (255, 0, 255), cv2.FILLED)
+                    if id == 8:
+                        app.x = cx
+                        app.y = cy
 
-    cv2.imshow("Image", img)
-    """
-    app.combo = False
-    app.critical_hit = False
-    # flips screen to march direction of movement
-    app.frame = cv2.flip(app.frame, 1)
-    # converts image to grayscale
-    gray = cv2.cvtColor(app.frame, cv2.COLOR_BGR2GRAY)
-    # perform a naive attempt to find the (x, y) coordinates of
-    # the area of the image with the largest intensity value
-    (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
-    app.x = maxLoc[0]
-    app.y = maxLoc[1]
-    cv2.circle(app.frame, maxLoc, 5, (255, 0, 0), 2)
+        cv2.imshow("Image", img)
 
-    cv2.imshow("Tracker", app.frame)
-    """
     # if fruit is sliced, set coordinates for falling and split to True
     # if fruit is sliced, set coordinates for falling and split to True
     for fruit in app.fruits:
@@ -425,7 +432,10 @@ def redrawAll(app, canvas):
             #play and help buttons
             canvas.create_oval(app.width // 4 + 60, 3 * app.height // 4 + 60, app.width // 4 - 60,
                                3 * app.height // 4 - 60, fill="red")
-            canvas.create_text(app.width // 4, 3 * app.height // 4, text="PLAY")
+            canvas.create_text(app.width // 4, 3 * app.height // 4, text="FLASHLIGHT MODE")
+            canvas.create_oval(app.width // 2 + 60, 3 * app.height // 4 + 60, app.width // 2 - 60,
+                               3 * app.height // 4 - 60, fill="green")
+            canvas.create_text(app.width // 2, 3 * app.height // 4, text="FINGER MODE")
             canvas.create_oval(3 * app.width // 4 + 60, 3 * app.height // 4 + 60, 3 * app.width // 4 - 60,
                                3 * app.height // 4 - 60,
                                fill="orange")
@@ -494,10 +504,10 @@ def redrawAll(app, canvas):
 
             # prints combos and critical hits
             if app.critical_hit:
-                canvas.create_text(app.width - 70, 40, text="CRITICAL HIT", fill="yellow",
-                                   font="Helvetica 15 bold underline")
+                canvas.create_text(app.width//2, 80, text="CRITICAL HIT", fill="yellow",
+                                   font="Arial 30 bold")
             if app.combo:
-                canvas.create_text(app.width - 70, 60, text="COMBO", fill="yellow", font="Helvetica 15 bold underline")
+                canvas.create_text(app.width//2, 80, text="COMBO", fill="yellow", font="Arial 30 bold")
 
 
 runApp(width=1000, height=670)
