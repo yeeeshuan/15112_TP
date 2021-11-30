@@ -122,11 +122,11 @@ class splash(object):
 def appStarted(app):
     # CITED FROM: https://imgs.mi9.com/uploads/game/4962/fruit-ninja_1920x1200_91746.jpg
     app.image1 = app.loadImage('background.jpg')
-    app.image2 = app.scaleImage(app.image1, 1)
+    app.image2 = app.scaleImage(app.image1, 1.5)
     # CITED FROM: https://toppng.com/uploads/preview/fruit-ninja-logo-11562993697enhbaryql9.png
     # created on photoshop with background.jpg
     app.image3 = app.loadImage('title.jpg')
-    app.image4 = app.scaleImage(app.image3, 1)
+    app.image4 = app.scaleImage(app.image3, 1.5)
     app.fruits = []
     app.timerDelay = 100
     app.gameStart = True
@@ -350,7 +350,7 @@ def timerFired(app):
 
                 # fruits are thrown from random positions—at most 125 pixels away
                 fruit.x = random.randint(x - 50, x)
-                x += 125
+                x += 250
 
         # increases the t variable for each fruit on screen
         count = 0
@@ -516,4 +516,4 @@ def redrawAll(app, canvas):
                 canvas.create_text(app.width // 2, 80, text="COMBO", fill="yellow", font="Arial 30 bold")
 
 
-runApp(width=1000, height=670)
+runApp(width=1440, height=850)
